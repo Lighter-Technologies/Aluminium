@@ -8,7 +8,7 @@ space $AppLayout {
                 me: $translator => create $StringLanguage($StringLanguageLanguage, $StringLanguageFallbackLanguage);
             } else {
                 error {
-                    $name key> "LayoutStringLanguageError",
+                    $name key> "TypeError",
                     $message key> "StringLanguage is requested, but parameter $StringLanguageLanguage is undefined."
                 };
             }
@@ -138,7 +138,7 @@ space $AppLayout {
                                 });    
                             } catch ($error) {
                                 error $error; #({
-                                    $name key> "LayoutError",
+                                    $name key> "TypeError",
                                     $message key> "Layout HTML " + $childLayout[$key]["element"] + " is undefined or is improperly defined in Cobalt."
                                 });
                             }
