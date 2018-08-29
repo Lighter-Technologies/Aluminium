@@ -1,0 +1,18 @@
+core-ui-header {
+    html "header"
+
+    defaultStyle {
+        margin "-8px"
+        padding "8px"
+        padding-top "10px"
+        padding-bottom "10px"
+        background-color "#2b77f2"
+        font-size "24px"
+        color "white"
+    }
+
+    styleAttributes {
+        bgcolour "background-color"
+        fgcolour "color"
+    }
+}

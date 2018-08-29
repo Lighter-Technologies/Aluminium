@@ -1,0 +1,4 @@
+res-style {
+    font-family "Roboto, sans-serif"
+    cursor "default"
+}

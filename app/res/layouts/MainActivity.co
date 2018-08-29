@@ -1,0 +1,18 @@
+layouts-MainActivity {
+    header {
+        element "header"
+
+        elements {
+            menu {
+                element "headerbutton"
+                icon "home"
+                alt "go-home"
+            }
+
+            title {
+                element "headertext"
+                text "my-app"
+            }
+        }
+    }
+}

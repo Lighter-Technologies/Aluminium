@@ -1,0 +1,13 @@
+core-ui-icon {
+    html "i"
+    defaultValue "home"
+
+    defaultAttributes {
+        ref "icon"
+        aria-label "Icon"
+    }
+
+    tagAttributes {
+        alt "aria-label"
+    }
+}

@@ -1,0 +1,11 @@
+strings-en-GB {
+    strings {
+        hello-world "Hello, world!"
+        my-app "My App"
+        go-home "Go Home"
+    }
+
+    format {
+        rtl false
+    }
+}

@@ -1,0 +1,5 @@
+res-manifest {
+    AppName "My Fabulous App"
+    ShortName "My App"
+    packageName "com.example.myapp"
+}

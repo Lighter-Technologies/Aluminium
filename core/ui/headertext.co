@@ -1,0 +1,17 @@
+core-ui-headertext {
+    html "div"
+    defaultValue "hello-world"
+    valueAttribute none
+
+    defaultStyle {
+        display "inline-block"
+        margin "-8px"
+        padding "8px"
+        padding-left "10px"
+        padding-right "10px"
+    }
+
+    styleAttributes {
+        width "width"
+    }
+}

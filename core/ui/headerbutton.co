@@ -1,0 +1,40 @@
+core-ui-headerbutton {
+    html "i"
+    defaultValue "home"
+    translateDefaultValue false
+
+    defaultStyle {
+        position "relative"
+        top "4px"
+        margin-top "-8px"
+        margin-bottom "-8px"
+        padding "8px"
+        padding-left "6px"
+        padding-right "6px"
+        border-radius "10px"
+        cursor "pointer"
+        transition "0.5s"
+    }
+
+    actionStyle {
+        hoverIn {
+            background-color "rgba(255, 255, 255, 0.2)"
+        }
+
+        hoverOut {
+            background-color "transparent"
+        }
+    }
+
+    defaultAttributes {
+        ref "icon"
+        role "button"
+        aria-label "icon-button"
+        tabindex "0"
+    }
+
+    tagAttributes {
+        alt "aria-label"
+        tab "tabindex"
+    }
+}
