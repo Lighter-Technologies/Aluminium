@@ -9,4 +9,5 @@ space $Core {
 }
 
 define $launcher => create $Core();
+
 $launcher: $start();
