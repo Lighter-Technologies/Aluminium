@@ -9,7 +9,7 @@ space $AppLayout {
             } else {
                 error {
                     $name key> "LayoutStringLanguageError",
-                    $message key> "StringLanguage is requested, but parameter " + $stringesc + "StringLanguageLanguage" + $stringesc + " is not defined."
+                    $message key> "StringLanguage is requested, but parameter $StringLanguageLanguage is undefined."
                 };
             }
         }
@@ -139,7 +139,7 @@ space $AppLayout {
                             } catch ($error) {
                                 error $error; #({
                                     $name key> "LayoutError",
-                                    $message key> "Layout html " + $stringesc + $childLayout[$key]["element"] + $stringesc + " is undefined or is improperly defined in Cobalt."
+                                    $message key> "Layout HTML " + $childLayout[$key]["element"] + " is undefined or is improperly defined in Cobalt."
                                 });
                             }
                         }
