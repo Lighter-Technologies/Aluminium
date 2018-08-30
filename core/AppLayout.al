@@ -9,7 +9,7 @@ space $AppLayout {
             } else {
                 error {
                     $name key> "TypeError",
-                    $message key> "StringLanguage is requested, but parameter $StringLanguageLanguage is undefined."
+                    $message key> "$useStringLanguage is true, but parameter $StringLanguageLanguage is undefined."
                 };
             }
         }
