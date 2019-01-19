@@ -15,7 +15,7 @@ The programming language that comes packed with features.
 ```
 define $launch => create $ActivityManager(me);
 
-$launch: $openActivity($ExampleActivity)
+$launch: $openActivity($ExampleActivity);
 ```
 
 ### `AppHead`
