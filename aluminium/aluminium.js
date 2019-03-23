@@ -153,15 +153,32 @@ var aluminium = {
             "Unexpected token": "Unexpected"
         };
 
-        Object.keys(keywords).forEach(function(key) {
-                errorMessage = errorMessage.replace(new RegExp(keywords[key].replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&"), "g"), key);
-            });
+        var errorMessageFinal = "";
+        var lastSection = "";
+        var isInQuote = false;
 
-            Object.keys(errorMessageReplacements).forEach(function(key) {
-                errorMessage = errorMessage.replace(new RegExp(key, "g"), errorMessageReplacements[key]);
-            });
+        for (var i = 0; i < errorMessage.length; i++) {
+            if (errorMessage[i] == '"') {
+                if (!isInQuote) {
+                    Object.keys(keywords).forEach(function(key) {
+                        lastSection = lastSection.replace(new RegExp(keywords[key].replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&"), "g"), key);
+                    });
+            
+                    Object.keys(errorMessageReplacements).forEach(function(key) {
+                        lastSection = lastSection.replace(new RegExp(key, "g"), errorMessageReplacements[key]);
+                    });
+                }
 
-            return errorMessage;
+                errorMessageFinal += lastSection;
+                lastSection = "";
+
+                isInQuote = !isInQuote;
+            } else {
+                lastSection += errorMessage[i];
+            }
+        }
+
+        return errorMessage;
     },
 
     start: function() {

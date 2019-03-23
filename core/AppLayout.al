@@ -137,10 +137,10 @@ space $AppLayout {
                                     }
                                 });    
                             } catch ($error) {
-                                error $error; #({
+                                error {
                                     $name key> "TypeError",
                                     $message key> "Layout HTML " + $childLayout[$key]["element"] + " is undefined or is improperly defined in Cobalt."
-                                });
+                                };
                             }
                         }
 

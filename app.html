@@ -1,4 +1,4 @@
- 
+
 <!DOCTYPE html>
 <html>
     <head>
@@ -232,15 +232,32 @@
             "Unexpected token": "Unexpected"
         };
 
-        Object.keys(keywords).forEach(function(key) {
-                errorMessage = errorMessage.replace(new RegExp(keywords[key].replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&"), "g"), key);
-            });
+        var errorMessageFinal = "";
+        var lastSection = "";
+        var isInQuote = false;
 
-            Object.keys(errorMessageReplacements).forEach(function(key) {
-                errorMessage = errorMessage.replace(new RegExp(key, "g"), errorMessageReplacements[key]);
-            });
+        for (var i = 0; i < errorMessage.length; i++) {
+            if (errorMessage[i] == '"') {
+                if (!isInQuote) {
+                    Object.keys(keywords).forEach(function(key) {
+                        lastSection = lastSection.replace(new RegExp(keywords[key].replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&"), "g"), key);
+                    });
+            
+                    Object.keys(errorMessageReplacements).forEach(function(key) {
+                        lastSection = lastSection.replace(new RegExp(key, "g"), errorMessageReplacements[key]);
+                    });
+                }
 
-            return errorMessage;
+                errorMessageFinal += lastSection;
+                lastSection = "";
+
+                isInQuote = !isInQuote;
+            } else {
+                lastSection += errorMessage[i];
+            }
+        }
+
+        return errorMessage;
     },
 
     start: function() {
@@ -332,418 +349,23 @@
     }
 };        </script>
         <script>
-            var source = `space $StringLanguage {
-    init($language, $fallbackLanguage => "en-GB") {
-        me: $language => $language;
-        me: $fallbackLanguage => $fallbackLanguage;
-
-        test {
-            if ($res["strings-" + me: $language]["format"]["rtl"] = true) {
-                $appSelector("html"): $attr("dir", "rtl");
-            } else {
-                $appSelector("html"): $attr("dir", "ltr");
-            }
-        } catch ($error) {
-            if ($res["strings-" + me: $fallbackLanguage]["format"]["rtl"] = true) {
-                $appSelector("html"): $attr("dir", "rtl");
-            } else {
-                $appSelector("html"): $attr("dir", "ltr");
-            }
-        }
-    }
-
-    $read($entry, $vars => {}) {
-        test {
-            if (type($res["strings-" + me: $language]["strings"][$entry]) = "string") {
-                define $translated => $res["strings-" + me: $language]["strings"][$entry];
-                define $language => me: $language;
-
-                keys($vars): each(to($key) {
-                    $translated => $translated: replace("$" + $key, $vars[$key]: localeNumeralBy($language));
-                });
-
-                return $translated;
-            } else {
-                return $entry;
-            }
-        } catch ($error) {
-            if (type($res["strings-" + me: $fallbackLanguage]["strings"][$entry]) = "string") {
-                define $translated => $res["strings-" + me: $fallbackLanguage]["strings"][$entry];
-                define $fallbackLanguage => me: $fallbackLanguage;
-
-                keys($vars): each(to($key) {
-                    $translated => $translated: replace("$" + $key, $vars[$key]: localeNumeralBy($fallbackLanguage));
-                });
-
-                return $translated;
-            } else {
-                return $entry;
-            }
-        }
-    }
-}
-space $AppHead {
-    setter $title($entry) {
-        $appSelector("title"): $text($entry);
-    }
-
-    getter $title() {
-        return $appSelector("title"): $text();
-    }
-
-    setter $icon($entry) {
-        $appSelector("link[rel='shortcut icon']"): $attr("href", $entry);
-    }
-
-    getter $icon() {
-        return $appSelector("link[rel='shortcut icon']"): $attr("href");
-    }
-}
-space $AppLayout {
-    init($res, $useStringLanguage => true, $StringLanguageLanguage => "en-GB", $StringLanguageFallbackLanguage => "en-GB") {
-        me: $layout => $res;
-        me: $useStringLanguage => $useStringLanguage;
-
-        if ($useStringLanguage) {
-            if (type($StringLanguageLanguage) = "string") {
-                me: $translator => create $StringLanguage($StringLanguageLanguage, $StringLanguageFallbackLanguage);
-            } else {
-                error {
-                    $name key> "LayoutStringLanguageError",
-                    $message key> "StringLanguage is requested, but parameter " + $stringesc + "StringLanguageLanguage" + $stringesc + " is not defined."
-                };
-            }
-        }
-    }
-
-    $draw() {
-        $appSelector("body"): $html("");
-
-        define $useStringLanguage => me: $useStringLanguage;
-        define $translator => me: $translator;
-
-        $appSelector("body"): $css($res["res-style"]);
-
-        to $exploreLayout($childLayout, $path) {
-            for (define $key partof $childLayout) {
-                if (type($childLayout[$key]) = "space" & $childLayout[$key] !:= none) {
-                    if ($childLayout[$key]["element"] != undefined) {
-                        if ($appSelector($path + " > ." + $childLayout[$key]["element"]): length = 0) {
-
-                            test {
-                                if ($res["core-ui-" + $childLayout[$key]["element"]]["html"] = undefined) {
-                                    error none;
-                                }
-
-                                $appSelector($path): $append("<" + $res["core-ui-" + $childLayout[$key]["element"]]["html"] + " id='" + $key + "'></div>");
-
-                                define $translateDefaultValue => true;
-                                define $translateTagAttributes => true;
-
-                                test {
-                                    if ($res["core-ui-" + $childLayout[$key]["element"]]["translateDefaultValue"] != undefined) {
-                                        $translateDefaultValue => $res["core-ui-" + $childLayout[$key]["element"]]["translateDefaultValue"];
-                                    }
-                                } ignore;
-
-                                test {
-                                    if ($res["core-ui-" + $childLayout[$key]["element"]]["translateTagAttributes"] != undefined) {
-                                        $translateTagAttributes => $res["core-ui-" + $childLayout[$key]["element"]]["translateTagAttributes"];
-                                    }
-                                } ignore;
-
-                                if ($useStringLanguage & $translateDefaultValue) {
-                                    define $defaultValue => $translator: $read($res["core-ui-" + $childLayout[$key]["element"]]["defaultValue"]);
-                                } else {
-                                    define $defaultValue => $res["core-ui-" + $childLayout[$key]["element"]]["defaultValue"];
-                                }
-
-                                define $valueAttribute => $res["core-ui-" + $childLayout[$key]["element"]]["valueAttribute"];
-                                define $defaultStyle => $res["core-ui-" + $childLayout[$key]["element"]]["defaultStyle"];
-                                define $actionStyle => $res["core-ui-" + $childLayout[$key]["element"]]["actionStyle"];
-                                define $defaultAttributes => $res["core-ui-" + $childLayout[$key]["element"]]["defaultAttributes"];
-                                define $styleAttributes => $res["core-ui-" + $childLayout[$key]["element"]]["styleAttributes"];
-                                define $tagAttributes => $res["core-ui-" + $childLayout[$key]["element"]]["tagAttributes"];
-                                define $childLayoutProperties => $childLayout[$key];
-                                define $selection => $path + " > #" + $key;
-
-                                if (type($defaultValue) = "string") {
-                                    if (type($valueAttribute) = "string") {
-                                        $appSelector($path + " > #" + $key): $attr($valueAttribute, $defaultValue);
-                                    } else {
-                                        $appSelector($path + " > #" + $key): $text($defaultValue);
-                                    }
-                                }
-
-                                test {
-                                    $appSelector($selection): $css($defaultStyle);
-                                } ignore;
-
-                                test {
-                                    keys($actionStyle): each(to($key) {
-                                        define $actionEvent => $actionStyle[$key];
-                                        define $targetSelection => $selection;
-
-                                        if ($key = "hoverIn") {
-                                            $appSelector($selection): $mouseenter(to($event) {
-                                                $appSelector($targetSelection): $css($actionEvent);
-                                            });
-                                        } elif ($key = "hoverOut") {
-                                            $appSelector($selection): $mouseleave(to($event) {
-                                                $appSelector($targetSelection): $css($actionEvent);
-                                            });
-                                        }
-                                    });
-                                } ignore;
-
-                                test {
-                                    keys($defaultAttributes): each(to($key) {
-                                        if ($useStringLanguage & $translateTagAttributes) {
-                                            $appSelector($selection): $attr($key, $translator: $read($defaultAttributes[$key]));
-                                        } else {
-                                            $appSelector($selection): $attr($key, $defaultAttributes[$key]);
-                                        }
-                                    });
-                                } ignore;
-
-                                keys($childLayoutProperties): each(to($key) {
-                                    if ($key != "element") {
-                                        if ($key = "text") {
-                                            if (type($valueAttribute) = "string") {
-                                                if ($useStringLanguage) {
-                                                    $appSelector($selection): $attr($valueAttribute, $translator: $read($childLayoutProperties[$key]));
-                                                } else {
-                                                    $appSelector($selection): $attr($valueAttribute, $childLayoutProperties[$key]);
-                                                }
-                                            } else {
-                                                if ($useStringLanguage) {
-                                                    $appSelector($selection): $text($translator: $read($childLayoutProperties[$key]));
-                                                } else {
-                                                    $appSelector($selection): $text($childLayoutProperties[$key]);
-                                                }
-                                            }
-                                        }
-
-                                        test {
-                                            $appSelector($selection): $css($styleAttributes[$key], $childLayoutProperties[$key]);
-                                        } ignore;
-
-                                        test {
-                                            if ($useStringLanguage & $translateTagAttributes) {
-                                                $appSelector($selection): $attr($tagAttributes[$key], $translator: $read($childLayoutProperties[$key]));
-                                            } else {
-                                                $appSelector($selection): $attr($tagAttributes[$key], $childLayoutProperties[$key]);
-                                            }
-                                        } ignore;
-                                    }
-                                });    
-                            } catch ($error) {
-                                error $error; #({
-                                    $name key> "LayoutError",
-                                    $message key> "Layout html " + $stringesc + $childLayout[$key]["element"] + $stringesc + " is undefined or is improperly defined in Cobalt."
-                                });
-                            }
-                        }
-
-                        $exploreLayout($childLayout[$key], $path + " > #" + $key);
-                    } else {
-                        $exploreLayout($childLayout[$key], $path);
-                    }
-                }
-            }
-        }
-
-        $exploreLayout(me: $layout, "body");
-    }
-}
-space $AppSettingsStorage {
-    init($key) {
-        me: $localStorage => $appWindow["localStorage"];
-        me: $key => $key;
-    }
-
-    setter $value($valueToStore) {
-        me: $localStorage["setItem"](me: $key, $valueToStore);
-    }
-
-    getter $value() {
-        if (me: $localStorage["getItem"](me: $key) = "null") {
-            return none;
-        } else {
-            return me: $localStorage["getItem"](me: $key);
-        }
-    }
-}
-space $ActivityManager {
-    init($refer) {
-        me: $refer => $refer;
-    }
-
-    $openActivity($activity, $referValue => none) {
-        define $launch => create $activity(me: $refer, $referValue);
-
-        $launch: $start();
-    }
-}
-space $MainActivity {
-    init($referrer, $referrerValue) {
-        me: $referrer => $referrer;
-        me: $referrerValue => $referrerValue;
-
-        me: $layout => $res;
-
-        me: $translator => create $StringLanguage($locale);
-        me: $layoutHandler => create $AppLayout(me: $layout, true, $locale);
-    }
-
-    $start() {
-        #("Insert your code here:");
-        log(me: $translator: $read("hello-world"));
-
-        me: $layoutHandler: $draw();
-    }
-}
-space $Core {
-    init() {
-        me: $launch => create $ActivityManager(me);
-    }
-
-    $start() {
-        me: $launch: $openActivity($MainActivity);
-    }
-}
-
-define $launcher => create $Core();
-
-$launcher: $start();
+            var source = `space $StringLanguage { init($language, $fallbackLanguage => "en-GB") { me: $language => $language; me: $fallbackLanguage => $fallbackLanguage; test { if ($res["strings-" + me: $language]["format"]["rtl"] = true) { $appSelector("html"): $attr("dir", "rtl"); } else { $appSelector("html"): $attr("dir", "ltr"); } } catch ($error) { if ($res["strings-" + me: $fallbackLanguage]["format"]["rtl"] = true) { $appSelector("html"): $attr("dir", "rtl"); } else { $appSelector("html"): $attr("dir", "ltr"); } } } $read($entry, $vars => {}) { test { if (type($res["strings-" + me: $language]["strings"][$entry]) = "string") { define $translated => $res["strings-" + me: $language]["strings"][$entry]; define $language => me: $language; keys($vars): each(to($key) { $translated => $translated: replace("$" + $key, $vars[$key]: localeNumeralBy($language)); }); return $translated; } else { return $entry; } } catch ($error) { if (type($res["strings-" + me: $fallbackLanguage]["strings"][$entry]) = "string") { define $translated => $res["strings-" + me: $fallbackLanguage]["strings"][$entry]; define $fallbackLanguage => me: $fallbackLanguage; keys($vars): each(to($key) { $translated => $translated: replace("$" + $key, $vars[$key]: localeNumeralBy($fallbackLanguage)); }); return $translated; } else { return $entry; } } } }
+space $AppHead { setter $title($entry) { $appSelector("title"): $text($entry); } getter $title() { return $appSelector("title"): $text(); } setter $icon($entry) { $appSelector("link[rel='shortcut icon']"): $attr("href", $entry); } getter $icon() { return $appSelector("link[rel='shortcut icon']"): $attr("href"); } }
+space $AppLayout { init($res, $useStringLanguage => true, $StringLanguageLanguage => "en-GB", $StringLanguageFallbackLanguage => "en-GB") { me: $layout => $res; me: $useStringLanguage => $useStringLanguage; if ($useStringLanguage) { if (type($StringLanguageLanguage) = "string") { me: $translator => create $StringLanguage($StringLanguageLanguage, $StringLanguageFallbackLanguage); } else { error { $name key> "TypeError", $message key> "$useStringLanguage is true, but parameter $StringLanguageLanguage is undefined." }; } } } $draw() { $appSelector("body"): $html(""); define $useStringLanguage => me: $useStringLanguage; define $translator => me: $translator; $appSelector("body"): $css($res["res-style"]); to $exploreLayout($childLayout, $path) { for (define $key partof $childLayout) { if (type($childLayout[$key]) = "space" & $childLayout[$key] !:= none) { if ($childLayout[$key]["element"] != undefined) { if ($appSelector($path + " > ." + $childLayout[$key]["element"]): length = 0) { test { if ($res["core-ui-" + $childLayout[$key]["element"]]["html"] = undefined) { error none; } $appSelector($path): $append("<" + $res["core-ui-" + $childLayout[$key]["element"]]["html"] + " id='" + $key + "'></div>"); define $translateDefaultValue => true; define $translateTagAttributes => true; test { if ($res["core-ui-" + $childLayout[$key]["element"]]["translateDefaultValue"] != undefined) { $translateDefaultValue => $res["core-ui-" + $childLayout[$key]["element"]]["translateDefaultValue"]; } } ignore; test { if ($res["core-ui-" + $childLayout[$key]["element"]]["translateTagAttributes"] != undefined) { $translateTagAttributes => $res["core-ui-" + $childLayout[$key]["element"]]["translateTagAttributes"]; } } ignore; if ($useStringLanguage & $translateDefaultValue) { define $defaultValue => $translator: $read($res["core-ui-" + $childLayout[$key]["element"]]["defaultValue"]); } else { define $defaultValue => $res["core-ui-" + $childLayout[$key]["element"]]["defaultValue"]; } define $valueAttribute => $res["core-ui-" + $childLayout[$key]["element"]]["valueAttribute"]; define $defaultStyle => $res["core-ui-" + $childLayout[$key]["element"]]["defaultStyle"]; define $actionStyle => $res["core-ui-" + $childLayout[$key]["element"]]["actionStyle"]; define $defaultAttributes => $res["core-ui-" + $childLayout[$key]["element"]]["defaultAttributes"]; define $styleAttributes => $res["core-ui-" + $childLayout[$key]["element"]]["styleAttributes"]; define $tagAttributes => $res["core-ui-" + $childLayout[$key]["element"]]["tagAttributes"]; define $childLayoutProperties => $childLayout[$key]; define $selection => $path + " > #" + $key; if (type($defaultValue) = "string") { if (type($valueAttribute) = "string") { $appSelector($path + " > #" + $key): $attr($valueAttribute, $defaultValue); } else { $appSelector($path + " > #" + $key): $text($defaultValue); } } test { $appSelector($selection): $css($defaultStyle); } ignore; test { keys($actionStyle): each(to($key) { define $actionEvent => $actionStyle[$key]; define $targetSelection => $selection; if ($key = "hoverIn") { $appSelector($selection): $mouseenter(to($event) { $appSelector($targetSelection): $css($actionEvent); }); } elif ($key = "hoverOut") { $appSelector($selection): $mouseleave(to($event) { $appSelector($targetSelection): $css($actionEvent); }); } }); } ignore; test { keys($defaultAttributes): each(to($key) { if ($useStringLanguage & $translateTagAttributes) { $appSelector($selection): $attr($key, $translator: $read($defaultAttributes[$key])); } else { $appSelector($selection): $attr($key, $defaultAttributes[$key]); } }); } ignore; keys($childLayoutProperties): each(to($key) { if ($key != "element") { if ($key = "text") { if (type($valueAttribute) = "string") { if ($useStringLanguage) { $appSelector($selection): $attr($valueAttribute, $translator: $read($childLayoutProperties[$key])); } else { $appSelector($selection): $attr($valueAttribute, $childLayoutProperties[$key]); } } else { if ($useStringLanguage) { $appSelector($selection): $text($translator: $read($childLayoutProperties[$key])); } else { $appSelector($selection): $text($childLayoutProperties[$key]); } } } test { $appSelector($selection): $css($styleAttributes[$key], $childLayoutProperties[$key]); } ignore; test { if ($useStringLanguage & $translateTagAttributes) { $appSelector($selection): $attr($tagAttributes[$key], $translator: $read($childLayoutProperties[$key])); } else { $appSelector($selection): $attr($tagAttributes[$key], $childLayoutProperties[$key]); } } ignore; } }); } catch ($error) { error { $name key> "TypeError", $message key> "Layout HTML " + $childLayout[$key]["element"] + " is undefined or is improperly defined in Cobalt." }; } } $exploreLayout($childLayout[$key], $path + " > #" + $key); } else { $exploreLayout($childLayout[$key], $path); } } } } $exploreLayout(me: $layout, "body"); } }
+space $AppSettingsStorage { init($key) { me: $localStorage => $appWindow["localStorage"]; me: $key => $key; } setter $value($valueToStore) { me: $localStorage["setItem"](me: $key, $valueToStore); } getter $value() { if (me: $localStorage["getItem"](me: $key) = "null") { return none; } else { return me: $localStorage["getItem"](me: $key); } } }
+space $ActivityManager { init($refer) { me: $refer => $refer; } $openActivity($activity, $referValue => none) { define $launch => create $activity(me: $refer, $referValue); $launch: $start(); } }
+space $MainActivity { init($referrer, $referrerValue) { me: $referrer => $referrer; me: $referrerValue => $referrerValue; me: $layout => $res; me: $translator => create $StringLanguage($locale); me: $layoutHandler => create $AppLayout(me: $layout, true, $locale); } $start() { #("Insert your code here:"); log(me: $translator: $read("hello-world")); me: $layoutHandler: $draw(); } }
+space $Core { init() { me: $launch => create $ActivityManager(me); } $start() { me: $launch: $openActivity($MainActivity); } } define $launcher => create $Core(); $launcher: $start();
 `;
             var res = {};
-            var resCobalt = `core-ui-header {
-    html "header"
-
-    defaultStyle {
-        margin "-8px"
-        padding "8px"
-        padding-top "10px"
-        padding-bottom "10px"
-        background-color "#2b77f2"
-        font-size "24px"
-        color "white"
-    }
-
-    styleAttributes {
-        bgcolour "background-color"
-        fgcolour "color"
-    }
-}
-core-ui-headerbutton {
-    html "i"
-    defaultValue "home"
-    translateDefaultValue false
-
-    defaultStyle {
-        position "relative"
-        top "4px"
-        margin-top "-8px"
-        margin-bottom "-8px"
-        padding "8px"
-        padding-left "6px"
-        padding-right "6px"
-        border-radius "10px"
-        cursor "pointer"
-        transition "0.5s"
-    }
-
-    actionStyle {
-        hoverIn {
-            background-color "rgba(255, 255, 255, 0.2)"
-        }
-
-        hoverOut {
-            background-color "transparent"
-        }
-    }
-
-    defaultAttributes {
-        ref "icon"
-        role "button"
-        aria-label "icon-button"
-        tabindex "0"
-    }
-
-    tagAttributes {
-        alt "aria-label"
-        tab "tabindex"
-    }
-}
-core-ui-headertext {
-    html "div"
-    defaultValue "hello-world"
-    valueAttribute none
-
-    defaultStyle {
-        display "inline-block"
-        margin "-8px"
-        padding "8px"
-        padding-left "10px"
-        padding-right "10px"
-    }
-
-    styleAttributes {
-        width "width"
-    }
-}
-core-ui-icon {
-    html "i"
-    defaultValue "home"
-
-    defaultAttributes {
-        ref "icon"
-        aria-label "Icon"
-    }
-
-    tagAttributes {
-        alt "aria-label"
-    }
-}
-res-style {
-    font-family "Roboto, sans-serif"
-    cursor "default"
-}
-res-manifest {
-    AppName "My Fabulous App"
-    ShortName "My App"
-    packageName "com.example.myapp"
-}
-strings-en-GB {
-    strings {
-        hello-world "Hello, world!"
-        my-app "My App"
-        go-home "Go Home"
-    }
-
-    format {
-        rtl false
-    }
-}
-layouts-MainActivity {
-    header {
-        element "header"
-
-        elements {
-            menu {
-                element "headerbutton"
-                icon "home"
-                alt "go-home"
-            }
-
-            title {
-                element "headertext"
-                text "my-app"
-            }
-        }
-    }
-}
+            var resCobalt = `core-ui-header { html "header" defaultStyle { margin "-8px" padding "8px" padding-top "10px" padding-bottom "10px" background-color "#2b77f2" font-size "24px" color "white" } styleAttributes { bgcolour "background-color" fgcolour "color" } }
+core-ui-headerbutton { html "i" defaultValue "home" translateDefaultValue false defaultStyle { position "relative" top "4px" margin-top "-8px" margin-bottom "-8px" padding "8px" padding-left "6px" padding-right "6px" border-radius "10px" cursor "pointer" transition "0.5s" } actionStyle { hoverIn { background-color "rgba(255, 255, 255, 0.2)" } hoverOut { background-color "transparent" } } defaultAttributes { ref "icon" role "button" aria-label "icon-button" tabindex "0" } tagAttributes { alt "aria-label" tab "tabindex" } }
+core-ui-headertext { html "div" defaultValue "hello-world" valueAttribute none defaultStyle { display "inline-block" margin "-8px" padding "8px" padding-left "10px" padding-right "10px" } styleAttributes { width "width" } }
+core-ui-icon { html "i" defaultValue "home" defaultAttributes { ref "icon" aria-label "Icon" } tagAttributes { alt "aria-label" } }
+res-style { font-family "Roboto, sans-serif" cursor "default" }
+res-manifest { AppName "My Fabulous App" ShortName "My App" packageName "com.example.myapp" }
+strings-en-GB { strings { hello-world "Hello, world!" my-app "My App" go-home "Go Home" } format { rtl false } }
+layouts-MainActivity { header { element "header" elements { menu { element "headerbutton" icon "home" alt "go-home" } title { element "headertext" text "my-app" } } } main { element "headertext" elements { text { element "headertext" text "test" } } } }
 `;
         </script>
         <script>/*! jQuery v1.8.3 jquery.com | jquery.org/license */
